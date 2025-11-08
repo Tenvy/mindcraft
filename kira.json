@@ -1,0 +1,5 @@
+{
+    "name": "Kira",
+    "model": "ollama/llama3",
+    "embedding": "ollama"
+}
