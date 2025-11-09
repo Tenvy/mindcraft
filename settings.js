@@ -8,6 +8,10 @@ const settings = {
     "mindserver_port": 8080,
     "auto_open_ui": true, // opens UI in browser on startup
     
+    // ngrok settings (expose mindserver to the internet)
+    "use_ngrok": true, // set to true to expose mindserver through ngrok tunnel
+    "ngrok_auth_token": "33gtmBGLW4IqAFZweE3muy7RKCJ_5aiTWfEH8iQy4ig6itp64", // get free token from https://dashboard.ngrok.com/get-started/your-authtoken
+    
     "base_profile": "assistant", // survival, assistant, creative, or god_mode
     "profiles": [
         "./kira.json",

@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import * as mindcraft from './mindcraft.js';
 import { readFileSync } from 'fs';
+import ngrok from '@ngrok/ngrok';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Mindserver is:
@@ -45,7 +46,7 @@ export function logoutAgent(agentName) {
 }
 
 // Initialize the server
-export function createMindServer(host_public = false, port = 8080) {
+export async function createMindServer(host_public = false, port = 8080, use_ngrok = false, ngrok_auth_token = '') {
     const app = express();
     server = http.createServer(app);
     io = new Server(server);
@@ -218,8 +219,33 @@ export function createMindServer(host_public = false, port = 8080) {
     });
 
     let host = host_public ? '0.0.0.0' : 'localhost';
-    server.listen(port, host, () => {
+    server.listen(port, host, async () => {
         console.log(`MindServer running on port ${port}`);
+        
+        // Start ngrok tunnel if enabled
+        if (use_ngrok) {
+            try {
+                console.log('Starting ngrok tunnel...');
+                
+                const listener = await ngrok.forward({
+                    addr: port,
+                    authtoken: ngrok_auth_token || undefined,
+                });
+                
+                const url = listener.url();
+                console.log(`\n${'='.repeat(60)}`);
+                console.log(`🌐 ngrok tunnel established!`);
+                console.log(`📍 Public URL: ${url}`);
+                console.log(`📍 Local URL: http://${host}:${port}`);
+                console.log(`${'='.repeat(60)}\n`);
+            } catch (error) {
+                console.error('Failed to start ngrok tunnel:', error.message);
+                console.error('Continuing with local server only...');
+                if (!ngrok_auth_token) {
+                    console.error('Tip: Get a free ngrok auth token from https://dashboard.ngrok.com/get-started/your-authtoken');
+                }
+            }
+        }
     });
 
     return server;
