@@ -78,7 +78,8 @@ export async function createMindServer(host_public = false, port = 8080, use_ngr
     io = new Server(server);
 
     // Determine the host
-    let host = host_public ? '0.0.0.0' : 'localhost';
+    // When using ngrok, bind to 0.0.0.0 so agent processes can connect
+    let host = (host_public || use_ngrok) ? '0.0.0.0' : 'localhost';
     
     // Check if the requested port is available, if not find an available one
     const availablePort = await findAvailablePort(port, host);
