@@ -9,13 +9,14 @@ let agent_processes = {};
 let agent_count = 0;
 let port = 8080;
 
-export async function init(host_public=false, port=8080, auto_open_ui=true, use_ngrok=false, ngrok_auth_token='') {
+export async function init(host_public=false, requestedPort=8080, auto_open_ui=true, use_ngrok=false, ngrok_auth_token='') {
     if (connected) {
         console.error('Already initiliazed!');
         return;
     }
-    mindserver = await createMindServer(host_public, port, use_ngrok, ngrok_auth_token);
-    port = port;
+    const result = await createMindServer(host_public, requestedPort, use_ngrok, ngrok_auth_token);
+    mindserver = result.server;
+    port = result.port;
     connected = true;
     if (auto_open_ui && !use_ngrok) {
         setTimeout(() => {

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import * as mindcraft from './mindcraft.js';
 import { readFileSync } from 'fs';
 import ngrok from '@ngrok/ngrok';
+import net from 'net';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Mindserver is:
@@ -17,6 +18,31 @@ let io;
 let server;
 const agent_connections = {};
 const agent_listeners = [];
+
+// Helper function to check if a port is available
+function isPortAvailable(port, host = 'localhost') {
+    return new Promise((resolve) => {
+        const tester = net.createServer()
+            .once('error', () => resolve(false))
+            .once('listening', () => {
+                tester.close(() => resolve(true));
+            })
+            .listen(port, host);
+    });
+}
+
+// Helper function to find an available port
+async function findAvailablePort(startPort, host = 'localhost') {
+    let port = startPort;
+    while (port < startPort + 100) { // Try up to 100 ports
+        if (await isPortAvailable(port, host)) {
+            return port;
+        }
+        console.log(`Port ${port} is in use, trying ${port + 1}...`);
+        port++;
+    }
+    throw new Error(`No available ports found between ${startPort} and ${startPort + 100}`);
+}
 
 const settings_spec = JSON.parse(readFileSync(path.join(__dirname, 'public/settings_spec.json'), 'utf8'));
 
@@ -50,6 +76,16 @@ export async function createMindServer(host_public = false, port = 8080, use_ngr
     const app = express();
     server = http.createServer(app);
     io = new Server(server);
+
+    // Determine the host
+    let host = host_public ? '0.0.0.0' : 'localhost';
+    
+    // Check if the requested port is available, if not find an available one
+    const availablePort = await findAvailablePort(port, host);
+    if (availablePort !== port) {
+        console.log(`⚠️  Port ${port} was in use. Using port ${availablePort} instead.`);
+        port = availablePort;
+    }
 
     // Serve static files
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -218,7 +254,6 @@ export async function createMindServer(host_public = false, port = 8080, use_ngr
         });
     });
 
-    let host = host_public ? '0.0.0.0' : 'localhost';
     server.listen(port, host, async () => {
         console.log(`MindServer running on port ${port}`);
         
@@ -248,7 +283,7 @@ export async function createMindServer(host_public = false, port = 8080, use_ngr
         }
     });
 
-    return server;
+    return { server, port };
 }
 
 function agentsStatusUpdate(socket) {

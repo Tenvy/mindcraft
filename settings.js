@@ -6,7 +6,7 @@ const settings = {
 
     // the mindserver manages all agents and hosts the UI
     "mindserver_port": 8080,
-    "auto_open_ui": true, // opens UI in browser on startup
+    "auto_open_ui": false, // opens UI in browser on startup
     
     // ngrok settings (expose mindserver to the internet)
     "use_ngrok": true, // set to true to expose mindserver through ngrok tunnel
